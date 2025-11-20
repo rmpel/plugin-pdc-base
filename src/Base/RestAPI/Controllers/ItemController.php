@@ -99,6 +99,16 @@ class ItemController extends BaseController
 
         $item = $item->find($id);
 
+        // WordPress does not apply Tax_Query when using a get-post-by-name Query. We need to check ourselves.
+        if ($item && $this->plugin->settings->useShowOn() && $this->showOnParamIsValid($request)) {
+            $showOnSlug = sanitize_text_field($request->get_param('source'));
+            $showOnTerms = get_the_terms($item['ID'], 'pdc-show-on');
+            $showOnTerms = wp_list_pluck($showOnTerms, 'slug');
+            if (!in_array($showOnSlug, $showOnTerms, true)) {
+                $item = null;
+            }
+        };
+
         if (! $item) {
             return new WP_Error('no_item_found', sprintf('Item with ID [%d] not found', $id), [
                 'status' => 404,
@@ -127,6 +137,16 @@ class ItemController extends BaseController
         $item = $this->buildQueryFromRequest($request);
 
         $item = $item->findBySlug($slug);
+
+        // WordPress does not apply Tax_Query when using a get-post-by-name Query. We need to check ourselves.
+        if ($item && $this->plugin->settings->useShowOn() && $this->showOnParamIsValid($request)) {
+            $showOnSlug = sanitize_text_field($request->get_param('source'));
+            $showOnTerms = get_the_terms($item['ID'], 'pdc-show-on');
+            $showOnTerms = wp_list_pluck($showOnTerms, 'slug');
+            if (!in_array($showOnSlug, $showOnTerms, true)) {
+                $item = null;
+            }
+        };
 
         if (! $item) {
             return new WP_Error(
